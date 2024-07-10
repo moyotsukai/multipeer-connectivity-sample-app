@@ -16,12 +16,23 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        multipeerConnectivityService.didReceiveMessage = { data in
+        multipeerConnectivityService.didReceiveData = { data in
             let dataString = String(data: data, encoding: .utf8) ?? ""
             DispatchQueue.main.async {
                 self.label.text = dataString
             }
             print(dataString)
+        }
+        
+        multipeerConnectivityService.didReceiveInvitation = { peerID, session, invitationHandler in
+            let alert = UIAlertController(title: "接続確認", message: "\(peerID.displayName) と接続しますか？", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "許可", style: .default, handler: { _ in
+                invitationHandler(true, session)
+            }))
+            alert.addAction(UIAlertAction(title: "拒否", style: .cancel, handler: { _ in
+                invitationHandler(false, nil)
+            }))
+            self.present(alert, animated: true, completion: nil)
         }
         
         multipeerConnectivityService.startHosting()

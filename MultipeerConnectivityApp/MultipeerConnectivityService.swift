@@ -15,7 +15,9 @@ class MultipeerConnectivityService: NSObject {
     private var session: MCSession!
     private var advertiser: MCNearbyServiceAdvertiser!
     private var browser: MCNearbyServiceBrowser!
-    public var didReceiveMessage: ((Data) -> Void)?
+    
+    public var didReceiveData: ((Data) -> Void)?
+    public var didReceiveInvitation: ((MCPeerID, MCSession, @escaping (Bool, MCSession?) -> Void) -> Void)?
     
     override init() {
         super.init()
@@ -70,7 +72,7 @@ extension MultipeerConnectivityService: MCSessionDelegate {
     }
 
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        didReceiveMessage?(data)
+        didReceiveData?(data)
     }
 
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
@@ -83,7 +85,7 @@ extension MultipeerConnectivityService: MCSessionDelegate {
 extension MultipeerConnectivityService: MCNearbyServiceAdvertiserDelegate {
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        invitationHandler(true, self.session)
+        didReceiveInvitation?(peerID, session, invitationHandler)
     }
 
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
@@ -106,3 +108,4 @@ extension MultipeerConnectivityService: MCNearbyServiceBrowserDelegate {
         print("Failed to start browsing: \(error.localizedDescription)")
     }
 }
+
