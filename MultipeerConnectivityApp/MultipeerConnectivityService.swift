@@ -8,6 +8,12 @@
 import Foundation
 import MultipeerConnectivity
 
+protocol MCServiceDelegate: AnyObject {
+    
+    func didReceiveData(data: Data)
+    func didReceiveInvitation(peerID: MCPeerID, session: MCSession, invitationHandler: @escaping (Bool, MCSession?) -> Void)
+}
+
 class MultipeerConnectivityService: NSObject {
     
     private let serviceType = "sample-app"
@@ -16,8 +22,7 @@ class MultipeerConnectivityService: NSObject {
     private var advertiser: MCNearbyServiceAdvertiser!
     private var browser: MCNearbyServiceBrowser!
     
-    public var didReceiveData: ((Data) -> Void)?
-    public var didReceiveInvitation: ((MCPeerID, MCSession, @escaping (Bool, MCSession?) -> Void) -> Void)?
+    public weak var serviceDelegate: MCServiceDelegate?
     
     override init() {
         super.init()
@@ -72,7 +77,7 @@ extension MultipeerConnectivityService: MCSessionDelegate {
     }
 
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        didReceiveData?(data)
+        serviceDelegate?.didReceiveData(data: data)
     }
 
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
@@ -85,7 +90,7 @@ extension MultipeerConnectivityService: MCSessionDelegate {
 extension MultipeerConnectivityService: MCNearbyServiceAdvertiserDelegate {
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        didReceiveInvitation?(peerID, session, invitationHandler)
+        serviceDelegate?.didReceiveInvitation(peerID: peerID, session: session, invitationHandler: invitationHandler)
     }
 
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
